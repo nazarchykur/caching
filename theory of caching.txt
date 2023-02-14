@@ -1,0 +1,179 @@
+Spring Boot Caching
+
+https://www.javatpoint.com/spring-boot-caching
+https://www.geeksforgeeks.org/spring-boot-caching/
+https://auth0.com/blog/spring-boot-caching-101/
+
+    
+    У Spring кеш — це механізм, який дозволяє узгоджено використовувати різні методи кешування з мінімальним впливом на код.
+    
+    
+    Cache Abstraction
+    
+        The cache abstraction mechanism applies to Java methods. The main objective of using cache abstraction is to 
+        reduce the number of executions based on the information present in the cache. It applies to expensive methods 
+        such as CPU or IO bound.
+        
+        Він перевіряє, чи був метод уже виконаний для даного аргументу чи ні.
+        
+        Якщо так, кешований результат повертається без виконання фактичного методу.
+        Якщо ні, спочатку виконується метод, а результат кешується та повертається користувачеві.
+        
+        Примітка. Цей підхід працює лише для методів, які гарантовано повертають той самий результат для заданого введення. 
+                  Не має значення, скільки разів виконується метод.
+        
+        
+        > Cache Declaration - Оголошення кешу: воно визначає методи, які потрібно кешувати.
+        > Cache Configuration - Конфігурація кешу: резервний кеш, де дані зберігаються та зчитуються.
+        
+    
+    Чому ми повинні використовувати кеш?
+        
+        Основна причина використання кешу полягає в тому, щоб зробити доступ до даних швидшим і дешевшим.    
+        Доступ до даних із пам’яті завжди швидший у порівнянні з отриманням даних із бази даних. 
+    
+    
+    Які дані слід кешувати?
+    
+        > Дані, які не змінюються часто.
+        > Часто використовуваний запит на читання, результати якого не змінюються під час кожного виклику, принаймні 
+            протягом певного періоду.
+    
+    
+    Типи кешування:    
+        > In-memory Caching
+        > Database Caching
+        > Web server Caching
+        > CDN Caching
+        
+========================================================================================================================
+In-memory Caching
+    In-memory caching increases the performance of the application. It is the area that is frequently used. 
+    Memcached and Redis are examples of in-memory caching. It stores key-value between application and database. 
+    Redis is an in-memory, distributed, and advanced caching tool that allows backup and restore facility. 
+    We can manage cache in distributed clusters, also.
+
+Database Caching
+    Database caching is a mechanism that generates web pages on-demand (dynamically) by fetching the data from the database. 
+    It is used in a multi-tier environment that involved clients, web-application server, and database. 
+    It improves scalability and performance by distributing a query workload. The most popular database caching is the 
+    first level cache of Hibernate.
+
+Web Server Caching
+    Web server caching is a mechanism that stores data for reuse. For example, a copy of a web page served by a web server. 
+    It is cached for the first time when a user visits the page. If the user requests the same next time, the cache 
+    serves a copy of the page. It avoids server form getting overloaded. Web server caching enhances the page delivery 
+    speed and reduces the work to be done by the backend server.
+
+CDN Caching
+    The CDN stands for Content Delivery Network. It is a component used in modern web applications. It improves the 
+    delivery of the content by replicating commonly requested files (such as HTML Pages, stylesheet, JavaScript, images, 
+    videos, etc.) across a globally distributed set of caching servers.
+    
+    It is the reason CDN becomes more popular. The CDN reduces the load on an application origin and improves the user 
+    experience. It delivers a local copy of the content from a nearby cache edge (a cache server that is closer to the 
+    end-user), or a Point of Presence (PoP).
+        
+        
+========================================================================================================================
+
+Spring Boot Cache Annotations
+
+    @EnableCaching
+        
+        @EnableCaching automatically sets up a valid instance of the CacheManager interface, which is needed to enable 
+        caching. In particular, this annotation look for one of the many cache engines we will analyze later in the article. 
+        If not found, it creates a ConcurrentMapCacheManager, which provides a default implementation of an in-memory 
+        cache based on a ConcurrentHashMap object.
+        
+        
+            @SpringBootApplication  
+            @EnableCaching   
+            public class SpringBootCachingApplication {  
+              public static void main(String[] args) {  
+                SpringApplication.run(SpringBootCachingApplication.class, args);  
+              }  
+            }
+            
+    
+    @Cacheable
+        
+        This method-level annotation lets Spring Boot know that the return value of the annotated method can be cached. 
+        Each time a method marked with this @Cacheable is called, the caching behavior will be applied. In particular, 
+        Spring Boot will check whether the method has been already invoked for the given arguments. This involves looking 
+        for a key, which is generated using the method parameters by default. If no value is found in the cache related 
+        to the method for the computed key, the target method will be executed normally. Otherwise, the cached value will 
+        be returned immediately. @Cacheable comes with many parameters, but the simplest way to use it is to annotate a 
+        method with the annotation and parameterize it with the name of the cache where the results are going to be stored.
+        
+            @Cacheable("authors")
+            public List<Author> getAuthors(List<Int> ids) { ... }
+            
+            
+        You can also specify how the key that uniquely identifies each entry in the cache should be generated by harnessing the key attribute.
+        
+            @Cacheable(value="book", key="#isbn")
+            public Book findBookByISBN(String isbn) { ... }
+            
+            @Cacheable(value="books", key="#author.id")
+            public Books findBooksByAuthor(Author author) { ... }
+        
+        Lastly, it is also possible to enable conditional caching as in the following example:
+        
+            // caching only authors whose full name is less than 15 carachters
+            @Cacheable(value="authors", condition="#fullName.length < 15")
+            public Authors findAuthorsByFullName(String fullName) { ... }
+        
+    
+    @CachePut
+        
+        This method-level annotation should be used when you want to update (put) the cache without avoiding the method 
+        from being executed. This means that the method will always be executed — according to the @CachePut options — 
+        and its result will be stored in the cache. The main difference between @Cacheable and @CachePut is that the 
+        first might avoid executing the method, while the second will run the method and put its results in the cache, 
+        even if there is already an existing key associated with the given parameters. Since they have different behaviors, 
+        annotating the same method with both @CachePut and @Cacheable should be avoided.
+            
+            @CachePut(cacheNames="employee", key="#id") //updating cache  
+            public Employee updateEmp(ID id, EmployeeData data) { ... }
+            
+            
+    @CacheEvict
+    
+        This method-level annotation allows you to remove (evict) data previously stored in the cache. By annotating a 
+        method with @CacheEvict you can specify the removal of one or all values so that fresh values can be loaded into 
+        the cache again. If you want to remove a specific value, you should pass the cache key as an argument to the 
+        annotation, as in the following example:
+        
+            @CacheEvict(value="authors", key="#authorId")
+            public void evictSingleAuthor(Int authorId) { ... }
+            
+        While if you want to clear an entire cache you can the parameter allEntries in conjunction with the name of cache to be cleared:
+        
+            @CacheEvict(value="authors", allEntries=true)
+            public String evictAllAuthorsCached() { ... }
+            
+        This annotation is extremely important because size is the main problem of caches. A possible solution to this 
+        problem is to compress data before caching, as explained here. On the other hand, the best approach should be 
+        to avoid keeping data that you are not using too often in the caches. In fact, since caches can become large 
+        very quickly, you should update stale data with @CachePut and remove unused data with @CacheEvict. In particular, 
+        having a method to clean all the caches of your Spring Boot application easily can become essential. If you are 
+        interested in implementing an API aimed at this, you can follow this tutorial.
+    
+    
+    @CacheConfig
+    
+        This class-level annotation allows you to specify some of the cache configurations in one place, so you do not 
+        have to repeat them multiple times:
+    
+            @CacheConfig(cacheNames={"authors"})
+            public class AuthorDAO {
+                @Cacheable
+                publicList<Author> findAuthorsByFullName(String fullName) { ... }
+                
+                @Cacheable
+                public List<Author> findAuthorsByBook(Book book) { ... }
+                
+                // ...
+            }
+            
