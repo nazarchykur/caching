@@ -1,9 +1,11 @@
 package com.example.cachingdemo1;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +42,13 @@ public class AuthorService {
             throw new RuntimeException(e);
         }
     }
-    
+
+    // дивись img_3_@CashePut.png
+    @CachePut(value = "author", key = "#id")
+    public Author createOrUpdate(Integer id) {
+        return new Author(id, "Leo", "Turtles", String.valueOf(LocalDateTime.now()));
+    }
+
 }
 
 /*
