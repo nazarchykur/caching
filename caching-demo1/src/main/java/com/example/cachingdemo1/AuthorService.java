@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -14,22 +15,32 @@ public class AuthorService {
     @Cacheable("authors")
     public List<Author> retrieveAll() {
         // simulating a delay due to the data retrieval operation
-        try  {
+        try {
             log.info("Retrieving all the authors...");
             Thread.sleep(3000);
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             log.error("InterruptedException: " + e.getMessage());
             e.printStackTrace();
         }
 
         // returning a list containing all the authors
         return Arrays.asList(
-                new Author("Patricia", "Brown", null),
-                new Author("James", "Smith", "1964-07-01"),
-                new Author("Mary", "Williams", "1988-11-19")
+                new Author(1, "Patricia", "Brown", null),
+                new Author(2, "James", "Smith", "1964-07-01"),
+                new Author(3, "Mary", "Williams", "1988-11-19")
         );
     }
+
+    @Cacheable(value = "author", key = "#id")
+    public Author getOrCreateAuthor(Integer id) {
+        try {
+            TimeUnit.SECONDS.sleep(3L);
+            return new Author(id, "Leo", "Turtles", "2010-10-20");
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
 }
 
 /*
