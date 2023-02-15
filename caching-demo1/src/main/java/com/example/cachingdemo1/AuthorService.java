@@ -1,6 +1,7 @@
 package com.example.cachingdemo1;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -47,6 +48,11 @@ public class AuthorService {
     @CachePut(value = "author", key = "#id")
     public Author createOrUpdate(Integer id) {
         return new Author(id, "Leo", "Turtles", String.valueOf(LocalDateTime.now()));
+    }
+
+    @CacheEvict(value = "author", key = "#id")
+    public void deleteAuthor(Integer id) {
+        // delete object from DB ...
     }
 
 }

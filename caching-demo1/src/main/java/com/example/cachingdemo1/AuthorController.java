@@ -3,6 +3,7 @@ package com.example.cachingdemo1;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -43,5 +44,11 @@ public class AuthorController {
     @PutMapping("/{id}")
     public Author createOrUpdate(@PathVariable("id") Integer id) {
         return authorService.createOrUpdate(id);
+    }
+
+    @DeleteMapping("/{id}")
+    public String deleteAuthor(@PathVariable("id") Integer id) {
+        authorService.deleteAuthor(id);
+        return "Successfully deleted Author with id= " + id;
     }
 }
